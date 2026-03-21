@@ -1,5 +1,5 @@
 
-all: dwm st dmenu slstatus
+all: dwm st dmenu slstatus slock
 
 dwm:
 	$(MAKE) -C dwm clean install
@@ -13,4 +13,7 @@ dmenu:
 slstatus:
 	$(MAKE) -C slstatus clean install
 
-.PHONY: all dwm st dmenu slstatus
+slock:
+	$(MAKE) -C slock clean install
+
+.PHONY: all dwm st dmenu slstatus slock
