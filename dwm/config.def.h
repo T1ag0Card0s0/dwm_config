@@ -23,11 +23,11 @@ static const int topbar             = 1;        /* 0 means bottom bar */
 static const char *fonts[]          = { "JetBrainsMono Nerd Font Mono:pixelsize=20:antialias=true:autohint=true" };
 static const char dmenufont[]       = "JetBrainsMono Nerd Font Mono:pixelsize=20:antialias=true:autohint=true";
 static const char stfont[] 			= "JetBrainsMono Nerd Font Mono:pixelsize=20:antialias=true:autohint=true";
-static const char col_gray1[]       = "#222222";
-static const char col_gray2[]       = "#444444";
-static const char col_gray3[]       = "#bbbbbb";
-static const char col_gray4[]       = "#eeeeee";
-static const char col_cyan[]        = "#005577";
+static const char col_gray1[] = "#2E3440";  /* bg */
+static const char col_gray2[] = "#4C566A";  /* border */
+static const char col_gray3[] = "#D8DEE9";  /* fg */
+static const char col_gray4[] = "#ECEFF4";  /* sel fg */
+static const char col_cyan[]  = "#5E81AC";  /* sel bg / border */
 static const char *colors[][3]      = {
 	/*               fg         bg         border   */
 	[SchemeNorm] = { col_gray3, col_gray1, col_gray2 },
@@ -73,6 +73,8 @@ static const Layout layouts[] = {
 #define SHCMD(cmd) { .v = (const char*[]){ "/usr/local/bin/st", "-f", stfont, cmd, NULL } }
 
 /* commands */
+static const char *voldowncmd[] = { "wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "5%-", NULL };
+static const char *volupcmd[]   = { "wpctl", "set-volume", "-l", "1.5", "@DEFAULT_AUDIO_SINK@", "5%+", NULL };
 static const char *lockcmd[] = { "slock", NULL };
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, "-c", "-l", "10", NULL };
@@ -91,7 +93,7 @@ static const Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_l,      setmfact,       {.f = +0.05} },
 	{ MODKEY,                       XK_Return, zoom,           {0} },
 	{ MODKEY,                       XK_Tab,    view,           {0} },
-	{ MODKEY|ShiftMask,             XK_c,      killclient,     {0} },
+	{ Mod1Mask,             		XK_F4,     killclient,     {0} },
 	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[0]} },
 	{ MODKEY,                       XK_f,      setlayout,      {.v = &layouts[1]} },
 	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[2]} },
@@ -108,6 +110,8 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_v,      spawn,          {.v = clipmenucmd } },
 	{ Mod1Mask,             		XK_Tab,    altTabStart,	   {0} },
 	{ MODKEY, 						XK_l, 	   spawn, 		   {.v = lockcmd } },
+	{ 0, XF86XK_AudioLowerVolume, spawn, {.v = voldowncmd } },
+	{ 0, XF86XK_AudioRaiseVolume, spawn, {.v = volupcmd   } },
 	TAGKEYS(                        XK_1,                      0)
 	TAGKEYS(                        XK_2,                      1)
 	TAGKEYS(                        XK_3,                      2)
