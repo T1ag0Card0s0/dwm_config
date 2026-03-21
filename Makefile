@@ -1,10 +1,7 @@
+PROGS := dwm st dmenu slstatus slock
+USER_HOME := /home/tr-cardoso
 
-all: dwm st dmenu slstatus slock
-	mkdir -p ~/.config/dunst
-	mkdir -p ~/.config/yazi
-	cp dunstrc ~/.config/dunst/
-	cp theme.toml ~/.config/yazi
-	cp .xinitrc ~/
+all: $(PROGS) install-configs
 
 dwm:
 	$(MAKE) -C dwm clean install
@@ -21,4 +18,22 @@ slstatus:
 slock:
 	$(MAKE) -C slock clean install
 
-.PHONY: all dwm st dmenu slstatus slock
+install-configs:
+	mkdir -p $(USER_HOME)/.config/dunst $(USER_HOME)/.config/yazi
+	if [ -f $(USER_HOME)/.xinitrc ]; then \
+		mv $(USER_HOME)/.xinitrc $(USER_HOME)/.xinitrc.bak_$(date +%Y%m%d_%H%M%S); \
+	fi
+	cp -fv dunstrc $(USER_HOME)/.config/dunst/
+	cp -fv theme.toml $(USER_HOME)/.config/yazi/
+	cp -fv .xinitrc $(USER_HOME)/.xinitrc
+
+clean:
+	@echo "Cleaning all programs..."
+	$(MAKE) -C dwm clean
+	$(MAKE) -C st clean
+	$(MAKE) -C dmenu clean
+	$(MAKE) -C slstatus clean
+	$(MAKE) -C slock clean
+	@echo "Clean done."
+
+.PHONY: all $(PROGS) install-configs clean
