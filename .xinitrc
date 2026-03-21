@@ -1,3 +1,4 @@
+blueman-applet &
 nm-applet &
 dunst &
 slstatus &
