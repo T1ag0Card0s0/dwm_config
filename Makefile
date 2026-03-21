@@ -1,5 +1,9 @@
 PROGS := dwm st dmenu slstatus slock
-USER_HOME := /home/tr-cardoso
+USER_HOME ?= ""
+
+ifeq ($(USER_HOME),"")
+$(error USER_HOME must not be empty)
+endif
 
 all: $(PROGS) install-configs
 
