@@ -2149,7 +2149,9 @@ viewnext(const Arg *arg) {
         if (selmon->tagset[selmon->seltags] & (1 << i))
             break;
     }
-    view(&(Arg){ .ui = 1 << ((i + 1) % LENGTH(tags)) });
+    if (i + 1 >= LENGTH(tags))
+        return;
+    view(&(Arg){ .ui = 1 << (i + 1) });
 }
 
 void
@@ -2159,7 +2161,9 @@ viewprev(const Arg *arg) {
         if (selmon->tagset[selmon->seltags] & (1 << i))
             break;
     }
-    view(&(Arg){ .ui = 1 << ((i - 1 + LENGTH(tags)) % LENGTH(tags)) });
+    if (i == 0)
+        return;
+    view(&(Arg){ .ui = 1 << (i - 1) });
 }
 
 int
