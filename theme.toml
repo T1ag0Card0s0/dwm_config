@@ -1,0 +1,135 @@
+[manager]
+cwd = { fg = "#5E81AC", bold = true }
+
+# Hovered
+hovered         = { fg = "#ECEFF4", bg = "#5E81AC", bold = true }
+preview_hovered = { fg = "#ECEFF4", bg = "#4C566A" }
+
+# Find
+find_keyword  = { fg = "#EBCB8B", bold = true, italic = true }
+find_position = { fg = "#A3BE8C", bold = true }
+
+# Marker
+marker_copied   = { fg = "#A3BE8C", bg = "#A3BE8C" }
+marker_cut      = { fg = "#BF616A", bg = "#BF616A" }
+marker_marked   = { fg = "#EBCB8B", bg = "#EBCB8B" }
+marker_selected = { fg = "#5E81AC", bg = "#5E81AC" }
+
+# Tab
+tab_active   = { fg = "#ECEFF4", bg = "#5E81AC", bold = true }
+tab_inactive = { fg = "#D8DEE9", bg = "#4C566A" }
+tab_width    = 1
+
+# Count
+count_copied   = { fg = "#2E3440", bg = "#A3BE8C" }
+count_cut      = { fg = "#2E3440", bg = "#BF616A" }
+count_selected = { fg = "#2E3440", bg = "#5E81AC" }
+
+# Border
+border_symbol = "│"
+border_style  = { fg = "#4C566A" }
+
+# Highlighting
+syntect_theme = ""
+
+
+[status]
+separator_open  = ""
+separator_close = ""
+separator_style = { fg = "#4C566A", bg = "#2E3440" }
+
+# Mode
+mode_normal = { fg = "#2E3440", bg = "#5E81AC", bold = true }
+mode_select = { fg = "#2E3440", bg = "#A3BE8C", bold = true }
+mode_unset  = { fg = "#2E3440", bg = "#EBCB8B", bold = true }
+
+# Progress
+progress_label  = { fg = "#ECEFF4", bold = true }
+progress_normal = { fg = "#5E81AC", bg = "#2E3440" }
+progress_error  = { fg = "#BF616A", bg = "#2E3440" }
+
+# Permissions
+perm_type  = { fg = "#5E81AC" }
+perm_read  = { fg = "#A3BE8C" }
+perm_write = { fg = "#BF616A" }
+perm_exec  = { fg = "#EBCB8B" }
+perm_sep   = { fg = "#4C566A" }
+
+
+[input]
+border   = { fg = "#5E81AC" }
+title    = { fg = "#5E81AC", bold = true }
+value    = { fg = "#D8DEE9" }
+selected = { fg = "#ECEFF4", bg = "#5E81AC" }
+
+
+[select]
+border   = { fg = "#5E81AC" }
+active   = { fg = "#5E81AC", bold = true }
+inactive = { fg = "#4C566A" }
+
+
+[tasks]
+border  = { fg = "#5E81AC" }
+title   = { fg = "#5E81AC", bold = true }
+hovered = { fg = "#ECEFF4", bg = "#4C566A" }
+
+
+[which]
+mask            = { bg = "#2E3440" }
+cand            = { fg = "#5E81AC" }
+rest            = { fg = "#4C566A" }
+desc            = { fg = "#D8DEE9" }
+separator       = "  "
+separator_style = { fg = "#4C566A" }
+
+
+[help]
+on      = { fg = "#5E81AC" }
+run     = { fg = "#A3BE8C" }
+desc    = { fg = "#D8DEE9" }
+hovered = { fg = "#ECEFF4", bg = "#4C566A" }
+footer  = { fg = "#2E3440", bg = "#5E81AC" }
+
+
+[filetype]
+rules = [
+  # Directories
+  { mime = "inode/directory", fg = "#5E81AC", bold = true },
+
+  # Images
+  { mime = "image/*", fg = "#A3BE8C" },
+
+  # Video
+  { mime = "video/*", fg = "#B48EAD" },
+
+  # Audio
+  { mime = "audio/*", fg = "#EBCB8B" },
+
+  # Archives
+  { mime = "application/zip",              fg = "#BF616A" },
+  { mime = "application/gzip",             fg = "#BF616A" },
+  { mime = "application/x-tar",            fg = "#BF616A" },
+  { mime = "application/x-bzip2",          fg = "#BF616A" },
+  { mime = "application/x-7z-compressed",  fg = "#BF616A" },
+  { mime = "application/x-rar",            fg = "#BF616A" },
+  { mime = "application/zstd",             fg = "#BF616A" },
+
+  # Documents
+  { mime = "application/pdf",              fg = "#EBCB8B" },
+  { mime = "application/msword",           fg = "#81A1C1" },
+  { mime = "application/vnd.oasis*",       fg = "#81A1C1" },
+
+  # Code / text
+  { mime = "text/*", fg = "#D8DEE9" },
+
+  # Executables
+  { mime = "application/x-executable",    fg = "#A3BE8C", bold = true },
+  { mime = "application/x-shellscript",   fg = "#A3BE8C" },
+
+  # Symlinks
+  { mime = "inode/symlink", fg = "#88C0D0", italic = true },
+
+  # Fallback
+  { mime = "*", fg = "#D8DEE9" },
+]

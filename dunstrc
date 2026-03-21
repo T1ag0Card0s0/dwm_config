@@ -1,0 +1,27 @@
+[global]
+    font = "Monospace 11"
+    geometry = "300x60-10+10"      # top-right corner
+    timeout = 5000                 # 5 seconds
+    frame_color = "#4C566A"        # col_gray2: border
+    background = "#2E3440"         # col_gray1: bg
+    foreground = "#D8DEE9"         # col_gray3: fg
+    underline_height = 2
+    padding = 8
+    icon_position = left
+    shrink = no
+
+[urgency_low]
+    background = "#2E3440"         # bg
+    foreground = "#D8DEE9"         # fg
+    frame_color = "#4C566A"        # border
+
+[urgency_normal]
+    background = "#5E81AC"         # col_cyan: selected bg
+    foreground = "#ECEFF4"         # col_gray4: selected fg
+    frame_color = "#4C566A"        # border
+
+[urgency_critical]
+    background = "#fb4934"         # red to stand out
+    foreground = "#ECEFF4"
+    frame_color = "#fb4934"
+    timeout = 0                    # stay until dismissed
