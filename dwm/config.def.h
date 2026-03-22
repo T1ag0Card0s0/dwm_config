@@ -28,14 +28,25 @@ static const char col_gray2[] = "#4C566A";  /* border */
 static const char col_gray3[] = "#D8DEE9";  /* fg */
 static const char col_gray4[] = "#ECEFF4";  /* sel fg */
 static const char col_cyan[]  = "#5E81AC";  /* sel bg / border */
-static const char *colors[][3]      = {
-	/*               fg         bg         border   */
-	[SchemeNorm] = { col_gray3, col_gray1, col_gray2 },
-	[SchemeSel]  = { col_gray4, col_cyan,  col_cyan  },
+static const char *colors[][3] = {
+    /*                       fg           bg           border   */
+    [SchemeNorm]         = { "#bbbbbb", "#222222", "#444444" },
+    [SchemeSel]          = { "#eeeeee", "#005577", "#005577" },
+    [SchemeTagActive]    = { "#FFE000", "#222222", "#222222" }, /* Pac-Man yellow */
+    [SchemeGhost0]       = { "#FF0000", "#222222", "#222222" }, /* Blinky red */
+    [SchemeGhost1]       = { "#FFB8FF", "#222222", "#222222" }, /* Pinky pink */
+    [SchemeGhost2]       = { "#00FFFF", "#222222", "#222222" }, /* Inky cyan */
+    [SchemeGhost3]       = { "#FFB852", "#222222", "#222222" }, /* Clyde orange */
 };
 
 /* tagging */
-static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+/* We use placeholder names; drawbar will replace them */
+static const char *tags[] = { "1", "2", "3", "4", "5"};
+
+/* Pac-Man symbols */
+static const char *tag_active      = "󰮯"; /* nf-md-pac_man*/
+static const char *tag_occupied    = "󰊠";  /* Ghost */
+static const char *tag_empty[]     = { "󰊠","󰊠","󰊠","󰊠","󰊠" };
 
 static const Rule rules[] = {
 	/* xprop(1):
@@ -89,8 +100,8 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
 	{ MODKEY,                       XK_i,      incnmaster,     {.i = +1 } },
 	{ MODKEY,                       XK_d,      incnmaster,     {.i = -1 } },
-	{ MODKEY|ShiftMask,             XK_h,      setmfact,       {.f = -0.05} },
-	{ MODKEY|ShiftMask,             XK_l,      setmfact,       {.f = +0.05} },
+	{ MODKEY|ShiftMask,             XK_h,      setmfact,       {.f = -0.001} },
+	{ MODKEY|ShiftMask,             XK_l,      setmfact,       {.f = +0.001} },
 	{ MODKEY,                       XK_Return, zoom,           {0} },
 	{ MODKEY,                       XK_Tab,    view,           {0} },
 	{ Mod1Mask,             		XK_F4,     killclient,     {0} },
