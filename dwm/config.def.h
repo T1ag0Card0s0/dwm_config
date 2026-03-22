@@ -84,6 +84,11 @@ static const Layout layouts[] = {
 #define SHCMD(cmd) { .v = (const char*[]){ "/usr/local/bin/st", "-f", stfont, cmd, NULL } }
 
 /* commands */
+static const char *screenshotcmd[] = {
+  "sh", "-c",
+  "mkdir -p ~/Pictures/Screenshots && maim -s | tee ~/Pictures/Screenshots/screenshot-$(date +%Y%m%d-%H%M%S).png | xclip -selection clipboard -t image/png",
+  NULL
+};
 static const char *voldowncmd[] = { "wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "5%-", NULL };
 static const char *volupcmd[]   = { "wpctl", "set-volume", "-l", "1.5", "@DEFAULT_AUDIO_SINK@", "5%+", NULL };
 static const char *lockcmd[] = { "slock", NULL };
@@ -121,8 +126,10 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_v,      spawn,          {.v = clipmenucmd } },
 	{ Mod1Mask,             		XK_Tab,    altTabStart,	   {0} },
 	{ MODKEY, 						XK_l, 	   spawn, 		   {.v = lockcmd } },
-	{ 0, XF86XK_AudioLowerVolume, spawn, {.v = voldowncmd } },
-	{ 0, XF86XK_AudioRaiseVolume, spawn, {.v = volupcmd   } },
+	{ 0, 							XF86XK_AudioLowerVolume, spawn, {.v = voldowncmd } },
+	{ 0, 							XF86XK_AudioRaiseVolume, spawn, {.v = volupcmd   } },
+	{ MODKEY|ShiftMask, 			XK_s,      spawn, 		   {.v = screenshotcmd } },
+	{ 0,                			XK_Print,  spawn, 		   {.v = screenshotcmd } },
 	TAGKEYS(                        XK_1,                      0)
 	TAGKEYS(                        XK_2,                      1)
 	TAGKEYS(                        XK_3,                      2)

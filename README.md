@@ -1,5 +1,7 @@
 # Setup
 
+![DWM Setup Screenshot](screenshot.png)
+
 To install everything
 
 ```bash
