@@ -89,6 +89,15 @@ static const char *screenshotcmd[] = {
   "mkdir -p ~/Pictures/Screenshots && maim -s | tee ~/Pictures/Screenshots/screenshot-$(date +%Y%m%d-%H%M%S).png | xclip -selection clipboard -t image/png",
   NULL
 };
+/* power menu command */
+static const char *powermenucmd[] = { "sh", "-c",
+    "choice=$(printf 'Shutdown\\nReboot\\nSuspend\\nLogout' | dmenu -c -l 4 -fn \"JetBrainsMono Nerd Font Mono:pixelsize=20\" -nb '#2E3440' -nf '#D8DEE9' -sb '#5E81AC' -sf '#ECEFF4') && "
+    "case \"$choice\" in "
+    "Shutdown) poweroff ;; "
+    "Reboot) reboot ;; "
+    "Suspend) systemctl suspend ;; "
+    "Logout) pkill dwm ;; "
+    "esac", NULL };
 static const char *voldowncmd[] = { "wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "5%-", NULL };
 static const char *volupcmd[]   = { "wpctl", "set-volume", "-l", "1.5", "@DEFAULT_AUDIO_SINK@", "5%+", NULL };
 static const char *lockcmd[] = { "slock", NULL };
@@ -157,5 +166,6 @@ static const Button buttons[] = {
 	{ ClkTagBar,            0,              Button3,        toggleview,     {0} },
 	{ ClkTagBar,            MODKEY,         Button1,        tag,            {0} },
 	{ ClkTagBar,            MODKEY,         Button3,        toggletag,      {0} },
+	{ ClkPowerBtn, 			0, 				Button1, 		spawn, 			{.v = powermenucmd } },
 };
 
