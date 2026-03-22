@@ -15,7 +15,7 @@ static const unsigned int tabCycleKey 		= 0x17;	/* if this key is hit the alt-ta
 static const unsigned int tabPosY 			= 1;	/* tab position on Y axis, 0 = bottom, 1 = center, 2 = top */
 static const unsigned int tabPosX 			= 1;	/* tab position on X axis, 0 = left, 1 = center, 2 = right */
 static const unsigned int maxWTab 			= 600;	/* tab menu width */
-static const unsigned int maxHTab 			= 200;	/* tab menu height */
+static const unsigned int maxHTab 			= 100;	/* tab menu height */
 
 static const int showsystray        = 1;        /* 0 means no systray */
 static const int showbar            = 1;        /* 0 means no bar */
