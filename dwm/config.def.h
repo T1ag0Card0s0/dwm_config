@@ -106,6 +106,12 @@ static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont,
 static const char *clipmenucmd[] = { "/usr/bin/clipmenu", "-c", NULL };
 static const char *termcmd[] = { "st", "-f", stfont, NULL };
 
+static const BarButton barbuttons[] = {
+    /* label        scheme          command       */
+    { " ⏻ ",       SchemeGhost0,   powermenucmd  },  /* rightmost */
+    /* add more here, each one appears one step to the left */
+};
+
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ MODKEY,                       XK_space,  spawn,          {.v = dmenucmd } },

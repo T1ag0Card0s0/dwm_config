@@ -170,6 +170,12 @@ struct Systray {
 	Client *icons;
 };
 
+typedef struct {
+    const char  *label;       /* text shown in the bar */
+    int          scheme;      /* color scheme index, e.g. SchemeGhost0 */
+    const char **cmd;         /* command to run on click */
+} BarButton;
+
 /* function declarations */
 static void applyrules(Client *c);
 static int applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact);
@@ -484,14 +490,34 @@ buttonpress(XEvent *e)
 		if (i < LENGTH(tags)) {
 			click = ClkTagBar;
 			arg.ui = 1 << i;
-		} else if (ev->x < x + TEXTW(selmon->ltsymbol))
+		} else if (ev->x < x + TEXTW(selmon->ltsymbol)) {
 			click = ClkLtSymbol;
-		else if (ev->x > selmon->ww - (int)TEXTW(" ⏻ ") - getsystraywidth())
-			click = ClkPowerBtn;
-		else if (ev->x > selmon->ww - (int)TEXTW(stext) - (int)TEXTW(" ⏻ ") - getsystraywidth())
-			click = ClkStatusText;
-		else
-			click = ClkWinTitle;
+		} else {
+			/* check bar buttons (right side, before systray) */
+			int btw = 0;
+			for (int bi = 0; bi < LENGTH(barbuttons); bi++)
+				btw += TEXTW(barbuttons[bi].label);
+
+			int stw = getsystraywidth();
+			int tw  = TEXTW(stext) - lrpad / 2 + 2;
+
+			if (ev->x >= selmon->ww - stw - btw) {
+				/* click is inside the button strip — find which button */
+				int bx = selmon->ww - stw - btw;
+				for (int bi = LENGTH(barbuttons) - 1; bi >= 0; bi--) {
+					int bw = TEXTW(barbuttons[bi].label);
+					if (ev->x >= bx && ev->x < bx + bw) {
+						spawn(&(Arg){ .v = barbuttons[bi].cmd });
+						return;
+					}
+					bx += bw;
+				}
+			} else if (ev->x >= selmon->ww - stw - btw - tw) {
+				click = ClkStatusText;
+			} else {
+				click = ClkWinTitle;
+			}
+		}
 	} else if ((c = wintoclient(ev->window))) {
 		focus(c);
 		restack(selmon);
@@ -807,14 +833,12 @@ dirtomon(int dir)
 void
 drawbar(Monitor *m)
 {
-	int x, w, tw = 0, stw = 0, pw = 0;
+	int x, w, tw = 0, stw = 0;
 	int boxs = drw->fonts->h / 9;
 	int boxw = drw->fonts->h / 6 + 2;
 	unsigned int i, occ = 0, urg = 0;
 	int ghost_idx = 0;
 	Client *c;
-
-	static const char *pwrbtn = " ⏻ ";
 
 	if (!m->showbar)
 		return;
@@ -822,16 +846,27 @@ drawbar(Monitor *m)
 	if (showsystray && m == systraytomon(m) && !systrayonleft)
 		stw = getsystraywidth();
 
-	/* draw power button */
-	pw = TEXTW(pwrbtn);
-	drw_setscheme(drw, scheme[SchemeGhost0]); /* red-ish scheme */
-	drw_text(drw, m->ww - pw - stw, 0, pw, bh, lrpad / 2, pwrbtn, 0);
+	/* total width of all bar buttons */
+	int btw = 0;
+	for (int bi = 0; bi < LENGTH(barbuttons); bi++)
+		btw += TEXTW(barbuttons[bi].label);
+
+	/* draw bar buttons right-to-left */
+	{
+		int bx = m->ww - stw - btw;
+		for (int bi = LENGTH(barbuttons) - 1; bi >= 0; bi--) {
+			int bw = TEXTW(barbuttons[bi].label);
+			drw_setscheme(drw, scheme[barbuttons[bi].scheme]);
+			drw_text(drw, bx, 0, bw, bh, lrpad / 2, barbuttons[bi].label, 0);
+			bx += bw;
+		}
+	}
 
 	/* draw status text */
 	if (m == selmon) {
 		drw_setscheme(drw, scheme[SchemeNorm]);
 		tw = TEXTW(stext) - lrpad / 2 + 2;
-		drw_text(drw, m->ww - tw - pw - stw, 0, tw, bh, lrpad / 2 - 2, stext, 0);
+		drw_text(drw, m->ww - tw - btw - stw, 0, tw, bh, lrpad / 2 - 2, stext, 0);
 	}
 
 	resizebarwin(m);
@@ -871,7 +906,7 @@ drawbar(Monitor *m)
 	drw_setscheme(drw, scheme[SchemeNorm]);
 	x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
 
-	if ((w = m->ww - tw - pw - stw - x) > bh) {
+	if ((w = m->ww - tw - btw - stw - x) > bh) {
 		if (m->sel) {
 			drw_setscheme(drw, scheme[m == selmon ? SchemeSel : SchemeNorm]);
 			drw_text(drw, x, 0, w, bh, lrpad / 2, m->sel->name, 0);
