@@ -145,6 +145,8 @@ static const Key keys[] = {
 	{ 0, 							XF86XK_AudioRaiseVolume, spawn, {.v = volupcmd   } },
 	{ MODKEY|ShiftMask, 			XK_s,      spawn, 		   {.v = screenshotcmd } },
 	{ 0,                			XK_Print,  spawn, 		   {.v = screenshotcmd } },
+	{ MODKEY|ShiftMask,             XK_j,      movestack,      {.i = +1 } },
+	{ MODKEY|ShiftMask,             XK_k,      movestack,      {.i = -1 } },
 	TAGKEYS(                        XK_1,                      0)
 	TAGKEYS(                        XK_2,                      1)
 	TAGKEYS(                        XK_3,                      2)
