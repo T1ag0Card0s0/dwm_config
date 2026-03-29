@@ -31,7 +31,7 @@ install-configs:
 	cp -fv theme.toml $(USER_HOME)/.config/yazi/
 	cp -fv .xinitrc $(USER_HOME)/.xinitrc
 	cp -fv picom.conf $(USER_HOME)/.config/picom/
-
+	cp -fv .Xresources $(USER_HOME)/.Xresources
 clean:
 	@echo "Cleaning all programs..."
 	$(MAKE) -C dwm clean
