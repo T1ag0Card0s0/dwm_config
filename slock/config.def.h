@@ -19,3 +19,5 @@ static const int blurRadius=10;
 // #define PIXELATION
 /*Set pixelation radius*/
 static const int pixelSize=5;
+static const int inputalpha  = 100;
+static const int failedalpha = 100;

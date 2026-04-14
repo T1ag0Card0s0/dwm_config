@@ -38,6 +38,8 @@ struct lock {
 	Window root, win;
 	Pixmap pmap;
 	Pixmap bgmap;
+	Pixmap inputmap;
+	Pixmap failedmap;
 	unsigned long colors[NUMCOLS];
 };
 
@@ -129,6 +131,34 @@ gethash(void)
 	return hash;
 }
 
+static Pixmap
+create_tinted_pixmap(Display *dpy, struct lock *lock, Imlib_Image src,
+                     int r, int g, int b, int a)
+{
+	int w = DisplayWidth(dpy, lock->screen);
+	int h = DisplayHeight(dpy, lock->screen);
+	Pixmap pm;
+	Imlib_Image clone;
+
+	pm = XCreatePixmap(dpy, lock->root, w, h, DefaultDepth(dpy, lock->screen));
+
+	imlib_context_set_image(src);
+	clone = imlib_clone_image();
+
+	imlib_context_set_image(clone);
+	imlib_context_set_display(dpy);
+	imlib_context_set_visual(DefaultVisual(dpy, lock->screen));
+	imlib_context_set_colormap(DefaultColormap(dpy, lock->screen));
+	imlib_context_set_drawable(pm);
+
+	imlib_context_set_color(r, g, b, a);
+	imlib_image_fill_rectangle(0, 0, w, h);
+	imlib_render_image_on_drawable(0, 0);
+
+	imlib_free_image();
+	return pm;
+}
+
 static void
 readpw(Display *dpy, struct xrandr *rr, struct lock **locks, int nscreens,
        const char *hash)
@@ -186,7 +216,8 @@ readpw(Display *dpy, struct xrandr *rr, struct lock **locks, int nscreens,
 				break;
 			default:
 				if (num && !iscntrl((int)buf[0]) &&
-				    (len + num < sizeof(passwd))) {
+					(len + num < sizeof(passwd))) {
+					failure = 0;
 					memcpy(passwd + len, buf, num);
 					len += num;
 				}
@@ -195,10 +226,26 @@ readpw(Display *dpy, struct xrandr *rr, struct lock **locks, int nscreens,
 			color = len ? INPUT : ((failure || failonclear) ? FAILED : INIT);
 			if (running && oldc != color) {
 				for (screen = 0; screen < nscreens; screen++) {
-                    if(locks[screen]->bgmap)
-                        XSetWindowBackgroundPixmap(dpy, locks[screen]->win, locks[screen]->bgmap);
-                    else
-                        XSetWindowBackground(dpy, locks[screen]->win, locks[screen]->colors[0]);
+					switch (color) {
+					case INIT:
+						if (locks[screen]->bgmap)
+							XSetWindowBackgroundPixmap(dpy, locks[screen]->win, locks[screen]->bgmap);
+						else
+							XSetWindowBackground(dpy, locks[screen]->win, locks[screen]->colors[INIT]);
+						break;
+					case INPUT:
+						if (locks[screen]->inputmap)
+							XSetWindowBackgroundPixmap(dpy, locks[screen]->win, locks[screen]->inputmap);
+						else
+							XSetWindowBackground(dpy, locks[screen]->win, locks[screen]->colors[INPUT]);
+						break;
+					case FAILED:
+						if (locks[screen]->failedmap)
+							XSetWindowBackgroundPixmap(dpy, locks[screen]->win, locks[screen]->failedmap);
+						else
+							XSetWindowBackground(dpy, locks[screen]->win, locks[screen]->colors[FAILED]);
+						break;
+					}
 					XClearWindow(dpy, locks[screen]->win);
 				}
 				oldc = color;
@@ -235,23 +282,28 @@ lockscreen(Display *dpy, struct xrandr *rr, int screen)
 	XSetWindowAttributes wa;
 	Cursor invisible;
 
-	if (dpy == NULL || screen < 0 || !(lock = malloc(sizeof(struct lock))))
+	if (dpy == NULL || screen < 0 || !(lock = calloc(1, sizeof(struct lock))))
 		return NULL;
 
 	lock->screen = screen;
 	lock->root = RootWindow(dpy, lock->screen);
 
-    if(image) 
-    {
-        lock->bgmap = XCreatePixmap(dpy, lock->root, DisplayWidth(dpy, lock->screen), DisplayHeight(dpy, lock->screen), DefaultDepth(dpy, lock->screen));
-        imlib_context_set_image(image);
-        imlib_context_set_display(dpy);
-        imlib_context_set_visual(DefaultVisual(dpy, lock->screen));
-        imlib_context_set_colormap(DefaultColormap(dpy, lock->screen));
-        imlib_context_set_drawable(lock->bgmap);
-        imlib_render_image_on_drawable(0, 0);
-        imlib_free_image();
-    }
+	if (image) {
+		int w = DisplayWidth(dpy, lock->screen);
+		int h = DisplayHeight(dpy, lock->screen);
+
+		lock->bgmap = XCreatePixmap(dpy, lock->root, w, h,
+									DefaultDepth(dpy, lock->screen));
+		imlib_context_set_image(image);
+		imlib_context_set_display(dpy);
+		imlib_context_set_visual(DefaultVisual(dpy, lock->screen));
+		imlib_context_set_colormap(DefaultColormap(dpy, lock->screen));
+		imlib_context_set_drawable(lock->bgmap);
+		imlib_render_image_on_drawable(0, 0);
+
+		lock->inputmap = create_tinted_pixmap(dpy, lock, image, 0x00, 0x55, 0x77, inputalpha);
+		lock->failedmap = create_tinted_pixmap(dpy, lock, image, 0xCC, 0x33, 0x33, failedalpha);
+	}
 	for (i = 0; i < NUMCOLS; i++) {
 		XAllocNamedColor(dpy, DefaultColormap(dpy, lock->screen),
 		                 colorname[i], &color, &dummy);
@@ -322,6 +374,35 @@ static void
 usage(void)
 {
 	die("usage: slock [-v] [cmd [arg ...]]\n");
+}
+
+static void
+freelocks(Display *dpy, struct lock **locks, int nscreens)
+{
+	int s;
+
+	if (!locks)
+		return;
+
+	for (s = 0; s < nscreens; s++) {
+		if (!locks[s])
+			continue;
+
+		if (locks[s]->pmap)
+			XFreePixmap(dpy, locks[s]->pmap);
+		if (locks[s]->bgmap)
+			XFreePixmap(dpy, locks[s]->bgmap);
+		if (locks[s]->inputmap)
+			XFreePixmap(dpy, locks[s]->inputmap);
+		if (locks[s]->failedmap)
+			XFreePixmap(dpy, locks[s]->failedmap);
+		if (locks[s]->win)
+			XDestroyWindow(dpy, locks[s]->win);
+
+		free(locks[s]);
+	}
+
+	free(locks);
 }
 
 int
@@ -446,8 +527,15 @@ main(int argc, char **argv) {
 	XSync(dpy, 0);
 
 	/* did we manage to lock everything? */
-	if (nlocks != nscreens)
+	if (nlocks != nscreens) {
+		freelocks(dpy, locks, nscreens);
+		if (image) {
+			imlib_context_set_image(image);
+			imlib_free_image();
+		}
+		XCloseDisplay(dpy);
 		return 1;
+	}
 
 	/* run post-lock command */
 	if (argc > 0) {
@@ -463,5 +551,13 @@ main(int argc, char **argv) {
 	/* everything is now blank. Wait for the correct password */
 	readpw(dpy, &rr, locks, nscreens, hash);
 
+	freelocks(dpy, locks, nscreens);
+
+	if (image) {
+		imlib_context_set_image(image);
+		imlib_free_image();
+	}
+
+	XCloseDisplay(dpy);
 	return 0;
 }
