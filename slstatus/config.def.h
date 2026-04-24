@@ -65,27 +65,20 @@ static const char unknown_str[] = "n/a";
  * wifi_perc           WiFi signal in percent          interface name (wlan0)
  */
 static const struct arg args[] = {
-    /* Volume - shows mute state */
-    { run_command,  "󰕾 %s | ",  "wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{vol=int($2*100); mute=(NF>2 && $3==\"[MUTED]\"); printf \"%s\", mute ? \"MUTE\" : vol\"%\"  }'" },
+    /* volume */
+    { run_command, "󰕾 %s | ", "wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{print ($3 == \"[MUTED]\") ? \"MUTE\" : int($2 * 100) \"%\"}'" },
 
-    /* Battery with charging state */
-    { battery_state, "%s",      "BAT0" },
-    { battery_perc,  "󰁹 %s%% | ", "BAT0" },
+    /* battery */
+    { battery_perc, "󰁹 %s%% | ", "BAT0" },
 
-    /* CPU + temp */
-    { cpu_perc,     "󰻠 %s%% ",  NULL },
-    { temp,         "(%s°C) | ", "/sys/class/thermal/thermal_zone0/temp" },
+    /* system */
+    { cpu_perc,  "󰻠 %s%% | ", NULL },
+    { ram_perc,  "󰍛 %s%% | ", NULL },
+    { disk_perc, "󰋊 %s%% | ", "/" },
 
-    /* RAM */
-    { ram_perc,     " %s%% | ", NULL },
+    /* network */
+    { wifi_perc, "󰤨 %s%% | ", "wlan0" },
 
-    /* Disk */
-    { disk_perc,    "󰋊 %s%% | ", "/" },
-
-    /* WiFi */
-    { wifi_essid,   "󰤨 %s ",    "wlan0" },
-    { wifi_perc,    "(%s%%) | ", "wlan0" },
-
-    /* Date and time combined */
-    { datetime,     "󰃭 %s",     "%H:%M  %Y-%m-%d" },
+    /* date */
+    { datetime, "󰃭 %s", "%H:%M  %Y-%m-%d" },
 };

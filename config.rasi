@@ -1,0 +1,20 @@
+configuration {
+    modi: "drun,run,window";
+    show-icons: true;
+    display-drun: " Apps";
+    display-run: " Run";
+    display-window: " Windows";
+    drun-display-format: "{name}";
+    window-format: "{w} · {c}";
+    font: "JetBrainsMono Nerd Font 11";
+    sidebar-mode: true;
+    disable-history: false;
+    hover-select: true;
+    me-select-entry: "";
+    me-accept-entry: "MousePrimary";
+    terminal: "st";
+    case-sensitive: false;
+    sort: true;
+    cycle: true;
+}
+@theme "~/.config/rofi/nord.rasi"

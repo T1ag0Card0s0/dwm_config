@@ -1,0 +1,157 @@
+* {
+    nord0:  #2E3440;
+    nord1:  #3B4252;
+    nord2:  #434C5E;
+    nord3:  #4C566A;
+
+    nord4:  #D8DEE9;
+    nord5:  #E5E9F0;
+    nord6:  #ECEFF4;
+
+    nord7:  #8FBCBB;
+    nord8:  #88C0D0;
+    nord9:  #81A1C1;
+    nord10: #5E81AC;
+
+    nord11: #BF616A;
+    nord12: #D08770;
+    nord13: #EBCB8B;
+    nord14: #A3BE8C;
+    nord15: #B48EAD;
+
+    background:     @nord0;
+    background-alt: @nord1;
+    foreground:     @nord4;
+    selected:       @nord9;
+    active:         @nord14;
+    urgent:         @nord11;
+
+    border-color:   @nord10;
+    separator-color:@nord3;
+
+    border-radius:  14px;
+    font: "JetBrainsMono Nerd Font 11";
+}
+
+window {
+    width: 42%;
+    location: center;
+    anchor: center;
+    fullscreen: false;
+    transparency: "real";
+    background-color: rgba(46, 52, 64, 0.92);
+    border: 2px;
+    border-color: @border-color;
+    border-radius: 18px;
+    padding: 20px;
+}
+
+mainbox {
+    background-color: transparent;
+    spacing: 14px;
+    children: [inputbar, message, listview, mode-switcher];
+}
+
+inputbar {
+    background-color: @background-alt;
+    text-color: @foreground;
+    border: 0px;
+    border-radius: 14px;
+    padding: 12px 14px;
+    spacing: 12px;
+    children: [prompt, entry];
+}
+
+prompt {
+    background-color: transparent;
+    text-color: @nord8;
+    enabled: true;
+    padding: 0px 4px 0px 0px;
+}
+
+entry {
+    background-color: transparent;
+    text-color: @foreground;
+    placeholder: "Search apps, commands, windows...";
+    placeholder-color: @nord3;
+    expand: true;
+    horizontal-align: 0.0;
+}
+
+message {
+    enabled: false;
+}
+
+listview {
+    background-color: transparent;
+    columns: 1;
+    lines: 10;
+    spacing: 8px;
+    cycle: true;
+    dynamic: true;
+    scrollbar: false;
+    layout: vertical;
+    reverse: false;
+    fixed-height: true;
+}
+
+element {
+    background-color: transparent;
+    text-color: @foreground;
+    orientation: horizontal;
+    border-radius: 12px;
+    padding: 10px 12px;
+    spacing: 12px;
+}
+
+element normal.normal {
+    background-color: transparent;
+    text-color: @foreground;
+}
+
+element selected.normal {
+    background-color: @selected;
+    text-color: @nord0;
+}
+
+element selected.active {
+    background-color: @active;
+    text-color: @nord0;
+}
+
+element selected.urgent {
+    background-color: @urgent;
+    text-color: @nord6;
+}
+
+element-icon {
+    background-color: transparent;
+    text-color: inherit;
+    size: 24px;
+    vertical-align: 0.5;
+}
+
+element-text {
+    background-color: transparent;
+    text-color: inherit;
+    vertical-align: 0.5;
+    horizontal-align: 0.0;
+}
+
+mode-switcher {
+    background-color: transparent;
+    spacing: 10px;
+}
+
+button {
+    background-color: @background-alt;
+    text-color: @nord8;
+    border: 0px;
+    border-radius: 12px;
+    padding: 10px 16px;
+}
+
+button selected {
+    background-color: @nord10;
+    text-color: @nord6;
+}
