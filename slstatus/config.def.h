@@ -65,6 +65,9 @@ static const char unknown_str[] = "n/a";
  * wifi_perc           WiFi signal in percent          interface name (wlan0)
  */
 static const struct arg args[] = {
+    /* currently playing media */
+    { run_command, "󰎆 %s | ", "playerctl metadata --format '{{ artist }} - {{ title }}' 2>/dev/null" },
+
     /* volume */
     { run_command, "󰕾 %s | ", "wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{print ($3 == \"[MUTED]\") ? \"MUTE\" : int($2 * 100) \"%\"}'" },
 

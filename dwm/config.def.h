@@ -20,7 +20,21 @@ static const unsigned int maxHTab 			= 100;	/* tab menu height */
 static const int showsystray        = 1;        /* 0 means no systray */
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
-static const char *fonts[]          = { "JetBrainsMono Nerd Font Mono:pixelsize=18:antialias=true:autohint=true" };
+
+static const char *fonts_mon0[] = { "JetBrainsMono Nerd Font Mono:pixelsize=14:antialias=true:autohint=true" };
+
+static const char *fonts_mon1[] = { "JetBrainsMono Nerd Font Mono:pixelsize=18:antialias=true:autohint=true" };
+
+static const char **barfonts[] = {
+    fonts_mon0,
+    fonts_mon1,
+};
+
+static const unsigned int barfontcounts[] = {
+    LENGTH(fonts_mon0),
+    LENGTH(fonts_mon1),
+};
+
 static const char dmenufont[]       = "JetBrainsMono Nerd Font Mono:pixelsize=20:antialias=true:autohint=true";
 static const char stfont[] 			= "JetBrainsMono Nerd Font Mono:pixelsize=20:antialias=true:autohint=true";
 static const char col_gray1[] = "#2E3440";  /* bg */

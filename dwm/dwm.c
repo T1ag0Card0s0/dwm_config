@@ -264,6 +264,7 @@ static int updategeom(void);
 static void updatenumlockmask(void);
 static void updatesizehints(Client *c);
 static void updatestatus(void);
+static void usemonfont(Monitor *m);
 static void updatesystray(void);
 static void updatesystrayicongeom(Client *i, int w, int h);
 static void updatesystrayiconstate(Client *i, XPropertyEvent *ev);
@@ -328,16 +329,39 @@ static Window root, wmcheckwin;
 /* configuration, allows nested code to access above variables */
 #include "config.h"
 
+static Fnt *barfontsets[LENGTH(barfonts)];
+static int barlrpads[LENGTH(barfonts)];
+
 /* compile-time check if all tags fit into an unsigned int bit array. */
 struct NumTags { char limitexceeded[LENGTH(tags) > 31 ? -1 : 1]; };
 
 static int
 getmonbarheight(Monitor *m)
 {
-	if (m->num == 0)
-		return bh - 4;
+	unsigned int i = 0;
+	int basebh;
 
-	return bh + 4;
+	if (m && m->num < LENGTH(barfontsets))
+		i = m->num;
+
+	basebh = barfontsets[i] ? barfontsets[i]->h + 2 : bh;
+
+	if (m->num == 0)
+		return basebh - 4;
+
+	return basebh + 4;
+}
+
+static void
+usemonfont(Monitor *m)
+{
+	unsigned int i = 0;
+
+	if (m && m->num < LENGTH(barfontsets))
+		i = m->num;
+
+	drw->fonts = barfontsets[i];
+	lrpad = barlrpads[i];
 }
 
 /* function implementations */
@@ -499,6 +523,7 @@ buttonpress(XEvent *e)
 		focus(NULL);
 	}
 	if (ev->window == selmon->barwin) {
+        usemonfont(selmon);
 		i = x = 0;
 		do
 			x += TEXTW(tags[i]);
@@ -583,11 +608,17 @@ cleanup(void)
 
 	for (i = 0; i < CurLast; i++)
 		drw_cur_free(drw, cursor[i]);
-	for (i = 0; i < LENGTH(colors); i++)
-		drw_scm_free(drw, scheme[i], 3);
-	free(scheme);
-	XDestroyWindow(dpy, wmcheckwin);
-	drw_free(drw);
+    for (i = 0; i < LENGTH(colors); i++)
+        drw_scm_free(drw, scheme[i], 3);
+    free(scheme);
+
+    for (i = 0; i < LENGTH(barfontsets); i++)
+        drw_fontset_free(barfontsets[i]);
+
+    drw->fonts = NULL;
+
+    XDestroyWindow(dpy, wmcheckwin);
+    drw_free(drw);
 	XSync(dpy, False);
 	XSetInputFocus(dpy, PointerRoot, RevertToPointerRoot, CurrentTime);
 	XDeleteProperty(dpy, root, netatom[NetActiveWindow]);
@@ -858,6 +889,8 @@ drawbar(Monitor *m)
 
 	if (!m->showbar)
 		return;
+
+	usemonfont(m);
 
 	if (showsystray && m == systraytomon(m) && !systrayonleft)
 		stw = getsystraywidth();
@@ -1840,10 +1873,17 @@ setup(void)
 	sh = DisplayHeight(dpy, screen);
 	root = RootWindow(dpy, screen);
 	drw = drw_create(dpy, screen, root, sw, sh);
-	if (!drw_fontset_create(drw, fonts, LENGTH(fonts)))
-		die("no fonts could be loaded.");
-	lrpad = drw->fonts->h;
-	bh = drw->fonts->h + 2;
+    for (i = 0; i < LENGTH(barfontsets); i++) {
+        if (!(barfontsets[i] = drw_fontset_create(drw, barfonts[i], barfontcounts[i])))
+            die("no fonts could be loaded.");
+
+        drw->fonts = barfontsets[i];
+        barlrpads[i] = drw->fonts->h;
+    }
+
+    drw->fonts = barfontsets[0];
+    lrpad = barlrpads[0];
+    bh = drw->fonts->h + 2;
 	updategeom();
 	/* init atoms */
 	utf8string = XInternAtom(dpy, "UTF8_STRING", False);
@@ -2614,10 +2654,15 @@ updatesystray(void)
 	XSetWindowAttributes wa;
 	XWindowChanges wc;
 	Client *i;
-	Monitor *m = systraytomon(NULL);
-	unsigned int x = m->mx + m->mw;
-	unsigned int sw = TEXTW(stext) - lrpad + systrayspacing;
-	unsigned int w = 1;
+    Monitor *m = systraytomon(NULL);
+    unsigned int x;
+    unsigned int sw;
+    unsigned int w = 1;
+
+    usemonfont(m);
+
+    x = m->mx + m->mw;
+    sw = TEXTW(stext) - lrpad + systrayspacing;
 
 	if (!showsystray)
 		return;
