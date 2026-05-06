@@ -339,17 +339,14 @@ static int
 getmonbarheight(Monitor *m)
 {
 	unsigned int i = 0;
-	int basebh;
 
 	if (m && m->num < LENGTH(barfontsets))
 		i = m->num;
 
-	basebh = barfontsets[i] ? barfontsets[i]->h + 2 : bh;
+	static const int barpadding[] = { 8, 20 };
+	int pad = (i < LENGTH(barpadding)) ? barpadding[i] : 8;
 
-	if (m->num == 0)
-		return basebh - 4;
-
-	return basebh + 4;
+	return barfontsets[i] ? barfontsets[i]->h + pad : bh + pad;
 }
 
 static void
@@ -892,10 +889,19 @@ drawbar(Monitor *m)
 
 	usemonfont(m);
 
+  /* Resize drawing buffer for this monitor's actual bar height */
+  drw_resize(drw, m->ww, m->bh);
+
+  /* Clear the full bar background, important for larger per-monitor bars */
+  XSetForeground(dpy, drw->gc, scheme[SchemeNorm][ColBg].pixel);
+  XFillRectangle(dpy, drw->drawable, drw->gc, 0, 0, m->ww, m->bh);
+
 	if (showsystray && m == systraytomon(m) && !systrayonleft)
 		stw = getsystraywidth();
 
-	/* total width of all bar buttons */
+  resizebarwin(m);
+
+  /* total width of all bar buttons */
 	int btw = 0;
 	for (int bi = 0; bi < LENGTH(barbuttons); bi++)
 		btw += TEXTW(barbuttons[bi].label);
@@ -917,8 +923,6 @@ drawbar(Monitor *m)
 		tw = TEXTW(stext) - lrpad / 2 + 2;
 		drw_text(drw, m->ww - tw - btw - stw, 0, tw, m->bh, lrpad / 2 - 2, stext, 0);
 	}
-
-	resizebarwin(m);
 
 	for (c = m->clients; c; c = c->next) {
 		occ |= c->tags;
@@ -2593,30 +2597,31 @@ void
 updatesystrayicongeom(Client *i, int w, int h)
 {
 	Monitor *m;
+	int iconbh;
 
 	if (!i)
 		return;
 
 	m = i->mon ? i->mon : systraytomon(NULL);
 
-	i->h = m->bh;
+	iconbh = m->bh;
+	i->h = iconbh;
 
 	if (w == h)
-		i->w = m->bh;
-	else if (h == m->bh)
+		i->w = iconbh;
+	else if (h == iconbh)
 		i->w = w;
 	else
-		i->w = (int)((float)m->bh * ((float)w / (float)h));
+		i->w = (int)((float)iconbh * ((float)w / (float)h));
 
 	applysizehints(i, &(i->x), &(i->y), &(i->w), &(i->h), False);
 
-	/* force icons into the systray dimensions if they don't want to */
-	if (i->h > m->bh) {
+	if (i->h > iconbh) {
 		if (i->w == i->h)
-			i->w = m->bh;
+			i->w = iconbh;
 		else
-			i->w = (int)((float)m->bh * ((float)i->w / (float)i->h));
-		i->h = m->bh;
+			i->w = (int)((float)iconbh * ((float)i->w / (float)i->h));
+		i->h = iconbh;
 	}
 }
 
@@ -2707,8 +2712,8 @@ updatesystray(void)
 	}
 	w = w ? w + systrayspacing : 1;
 	x -= w;
-	XMoveResizeWindow(dpy, systray->win, x, m->by, w, m->bh);
-	wc.x = x; wc.y = m->by; wc.width = w; wc.height = m->bh;
+  XMoveResizeWindow(dpy, systray->win, x, m->by, w, m->bh);
+  wc.x = x; wc.y = m->by; wc.width = w; wc.height = m->bh;
 	wc.stack_mode = Above; wc.sibling = m->barwin;
 	XConfigureWindow(dpy, systray->win, CWX|CWY|CWWidth|CWHeight|CWSibling|CWStackMode, &wc);
 	XMapWindow(dpy, systray->win);

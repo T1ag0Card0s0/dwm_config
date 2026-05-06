@@ -23,7 +23,7 @@ static const int topbar             = 1;        /* 0 means bottom bar */
 
 static const char *fonts_mon0[] = { "JetBrainsMono Nerd Font Mono:pixelsize=14:antialias=true:autohint=true" };
 
-static const char *fonts_mon1[] = { "JetBrainsMono Nerd Font Mono:pixelsize=18:antialias=true:autohint=true" };
+static const char *fonts_mon1[] = { "JetBrainsMono Nerd Font Mono:pixelsize=20:antialias=true:autohint=true" };
 
 static const char **barfonts[] = {
     fonts_mon0,

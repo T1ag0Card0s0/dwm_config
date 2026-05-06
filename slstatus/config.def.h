@@ -74,13 +74,10 @@ static const struct arg args[] = {
     /* battery */
     { battery_perc, "󰁹 %s%% | ", "BAT0" },
 
-    /* system */
-    { cpu_perc,  "󰻠 %s%% | ", NULL },
-    { ram_perc,  "󰍛 %s%% | ", NULL },
-    { disk_perc, "󰋊 %s%% | ", "/" },
-
-    /* network */
-    { wifi_perc, "󰤨 %s%% | ", "wlan0" },
+    /* disk partitions */
+    { disk_perc, "/ %s%% | ", "/" },
+    { disk_perc, "/boot %s%% | ", "/boot" },
+    { disk_perc, "/home %s%% | ", "/home" },
 
     /* date */
     { datetime, "󰃭 %s", "%H:%M  %Y-%m-%d" },
