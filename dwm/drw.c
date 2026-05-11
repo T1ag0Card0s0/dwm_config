@@ -261,7 +261,8 @@ drw_text(Drw *drw, int x, int y, unsigned int w, unsigned int h, unsigned int lp
 	int charexists = 0, overflow = 0;
 	/* keep track of a couple codepoints for which we have no match. */
 	static unsigned int nomatches[128], ellipsis_width, invalid_width;
-	static const char invalid[] = "�";
+  static const char invalid[] = "�";
+  static const char ellipsis[] = "...";
 
 	if (!drw || (render && (!drw->scheme || !w)) || !text || !drw->fonts)
 		return 0;
@@ -343,8 +344,12 @@ drw_text(Drw *drw, int x, int y, unsigned int w, unsigned int h, unsigned int lp
 			x += invalid_width;
 			w -= invalid_width;
 		}
-		if (render && overflow)
-			drw_text(drw, ellipsis_x, y, ellipsis_w, h, 0, "...", invert);
+    if (render && overflow && ellipsis_w >= ellipsis_width) {
+        ty = y + (h - usedfont->h) / 2 + usedfont->xfont->ascent;
+        XftDrawStringUtf8(d, &drw->scheme[invert ? ColBg : ColFg],
+                          usedfont->xfont, ellipsis_x, ty,
+                          (XftChar8 *)"...", strlen("..."));
+    }
 
 		if (!*text || overflow) {
 			break;

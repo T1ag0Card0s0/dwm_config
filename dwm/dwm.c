@@ -918,11 +918,9 @@ drawbar(Monitor *m)
 	}
 
 	/* draw status text */
-	if (m == selmon) {
 		drw_setscheme(drw, scheme[SchemeNorm]);
 		tw = TEXTW(stext) - lrpad / 2 + 2;
 		drw_text(drw, m->ww - tw - btw - stw, 0, tw, m->bh, lrpad / 2 - 2, stext, 0);
-	}
 
 	for (c = m->clients; c; c = c->next) {
 		occ |= c->tags;
@@ -2589,7 +2587,7 @@ updatestatus(void)
 {
 	if (!gettextprop(root, XA_WM_NAME, stext, sizeof(stext)))
 		strcpy(stext, "dwm-"VERSION);
-	drawbar(selmon);
+	drawbars();
 	updatesystray();
 }
 
