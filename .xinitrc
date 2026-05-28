@@ -31,4 +31,7 @@ export XDG_CURRENT_DESKTOP=dwm
 export XDG_SESSION_DESKTOP=dwm
 export XDG_SESSION_TYPE=x11
 
+eval "$(gnome-keyring-daemon --start --components=pkcs11,secrets,ssh)"
+export SSH_AUTH_SOCK
+
 exec dwm
