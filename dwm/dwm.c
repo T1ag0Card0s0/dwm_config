@@ -172,9 +172,10 @@ struct Systray {
 };
 
 typedef struct {
-    const char  *label;       /* text shown in the bar */
-    int          scheme;      /* color scheme index, e.g. SchemeGhost0 */
-    const char **cmd;         /* command to run on click */
+    const char **label;             /* text shown in the bar */
+    int          scheme;            /* color scheme index */
+    void       (*func)(const Arg *);/* callback on click */
+    const Arg    arg;
 } BarButton;
 
 /* function declarations */
@@ -289,6 +290,8 @@ static void viewnext(const Arg *arg);
 static void viewprev(const Arg *arg);
 static void movestack(const Arg *arg);
 static int getmonbarheight(Monitor *m);
+static void cyclepowerprofile(const Arg *arg);
+static void updatepowerprofilelabel(void);
 
 /* variables */
 static Systray *systray = NULL;
@@ -343,7 +346,7 @@ getmonbarheight(Monitor *m)
 	if (m && m->num < LENGTH(barfontsets))
 		i = m->num;
 
-	static const int barpadding[] = { 8, 20 };
+	static const int barpadding[] = { 8, 10 };
 	int pad = (i < LENGTH(barpadding)) ? barpadding[i] : 8;
 
 	return barfontsets[i] ? barfontsets[i]->h + pad : bh + pad;
@@ -513,18 +516,22 @@ buttonpress(XEvent *e)
 	XButtonPressedEvent *ev = &e->xbutton;
 
 	click = ClkRootWin;
+
 	/* focus monitor if necessary */
 	if ((m = wintomon(ev->window)) && m != selmon) {
 		unfocus(selmon->sel, 1);
 		selmon = m;
 		focus(NULL);
 	}
+
 	if (ev->window == selmon->barwin) {
-        usemonfont(selmon);
+		usemonfont(selmon);
 		i = x = 0;
+
 		do
 			x += TEXTW(tags[i]);
 		while (ev->x >= x && ++i < LENGTH(tags));
+
 		if (i < LENGTH(tags)) {
 			click = ClkTagBar;
 			arg.ui = 1 << i;
@@ -534,20 +541,25 @@ buttonpress(XEvent *e)
 			/* check bar buttons (right side, before systray) */
 			int btw = 0;
 			for (int bi = 0; bi < LENGTH(barbuttons); bi++)
-				btw += TEXTW(barbuttons[bi].label);
+				btw += TEXTW(*barbuttons[bi].label);
 
-			int stw = getsystraywidth();
-			int tw  = TEXTW(stext) - lrpad / 2 + 2;
+			int stw = 0;
+			if (showsystray && selmon == systraytomon(selmon) && !systrayonleft)
+				stw = getsystraywidth();
+
+			int tw = TEXTW(stext) - lrpad / 2 + 2;
 
 			if (ev->x >= selmon->ww - stw - btw) {
-				/* click is inside the button strip — find which button */
 				int bx = selmon->ww - stw - btw;
+
 				for (int bi = LENGTH(barbuttons) - 1; bi >= 0; bi--) {
-					int bw = TEXTW(barbuttons[bi].label);
+					int bw = TEXTW(*barbuttons[bi].label);
+
 					if (ev->x >= bx && ev->x < bx + bw) {
-						spawn(&(Arg){ .v = barbuttons[bi].cmd });
+						barbuttons[bi].func(&barbuttons[bi].arg);
 						return;
 					}
+
 					bx += bw;
 				}
 			} else if (ev->x >= selmon->ww - stw - btw - tw) {
@@ -562,10 +574,16 @@ buttonpress(XEvent *e)
 		XAllowEvents(dpy, ReplayPointer, CurrentTime);
 		click = ClkClientWin;
 	}
+
 	for (i = 0; i < LENGTH(buttons); i++)
-		if (click == buttons[i].click && buttons[i].func && buttons[i].button == ev->button
+		if (click == buttons[i].click && buttons[i].func
+		&& buttons[i].button == ev->button
 		&& CLEANMASK(buttons[i].mask) == CLEANMASK(ev->state))
-			buttons[i].func(click == ClkTagBar && buttons[i].arg.i == 0 ? &arg : &buttons[i].arg);
+			buttons[i].func(
+				click == ClkTagBar && buttons[i].arg.i == 0
+				? &arg
+				: &buttons[i].arg
+			);
 }
 
 void
@@ -904,15 +922,15 @@ drawbar(Monitor *m)
   /* total width of all bar buttons */
 	int btw = 0;
 	for (int bi = 0; bi < LENGTH(barbuttons); bi++)
-		btw += TEXTW(barbuttons[bi].label);
+		btw += TEXTW(*barbuttons[bi].label);
 
 	/* draw bar buttons right-to-left */
 	{
 		int bx = m->ww - stw - btw;
 		for (int bi = LENGTH(barbuttons) - 1; bi >= 0; bi--) {
-			int bw = TEXTW(barbuttons[bi].label);
-			drw_setscheme(drw, scheme[barbuttons[bi].scheme]);
-			drw_text(drw, bx, 0, bw, m->bh, lrpad / 2, barbuttons[bi].label, 0);
+			int bw = TEXTW(*barbuttons[bi].label);
+      		drw_setscheme(drw, scheme[barbuttons[bi].scheme]);
+      		drw_text(drw, bx, 0, bw, m->bh, lrpad / 2, *barbuttons[bi].label, 0);
 			bx += bw;
 		}
 	}
@@ -1922,6 +1940,8 @@ setup(void)
 	/* init bars */
 	updatebars();
 	updatestatus();
+  	updatepowerprofilelabel();
+  	drawbars();
 	/* supporting window for NetWMCheck */
 	wmcheckwin = XCreateSimpleWindow(dpy, root, 0, 0, 1, 1, 0, 0, 0);
 	XChangeProperty(dpy, wmcheckwin, netatom[NetWMCheck], XA_WINDOW, 32,
@@ -1996,6 +2016,69 @@ spawn(const Arg *arg)
 	}
 }
 
+static void
+updatepowerprofilelabel(void)
+{
+	FILE *fp;
+	char profile[64];
+
+	fp = popen("powerprofilesctl get 2>/dev/null", "r");
+	if (!fp)
+		return;
+
+	if (fgets(profile, sizeof profile, fp)) {
+		profile[strcspn(profile, "\n")] = '\0';
+
+		for (int i = 0; i < LENGTH(powerprofile_icons); i++) {
+			if (!strcmp(profile, powerprofile_icons[i][0])) {
+				powerprofile_button_label = powerprofile_icons[i][1];
+				break;
+			}
+		}
+	}
+
+	pclose(fp);
+}
+
+static void
+cyclepowerprofile(const Arg *arg)
+{
+	FILE *fp;
+	char profile[64] = "balanced";
+	const char *next = "performance";
+
+	fp = popen("powerprofilesctl get 2>/dev/null", "r");
+	if (fp) {
+		if (fgets(profile, sizeof profile, fp))
+			profile[strcspn(profile, "\n")] = '\0';
+		pclose(fp);
+	}
+
+	if (!strcmp(profile, "power-saver"))
+		next = "balanced";
+	else if (!strcmp(profile, "balanced"))
+		next = "performance";
+	else if (!strcmp(profile, "performance"))
+		next = "power-saver";
+
+	char cmd[128];
+	snprintf(cmd, sizeof cmd, "powerprofilesctl set %s", next);
+	system(cmd);
+
+	updatepowerprofilelabel();
+
+	char notifycmd[256];
+	snprintf(
+		notifycmd,
+		sizeof notifycmd,
+		"notify-send 'Power profile changed' '%s'",
+		powerprofile_button_label
+	);
+	system(notifycmd);
+
+	drawbars();
+}
+
 void
 altTab()
 {
@@ -2056,30 +2139,29 @@ altTabEnd()
 void
 drawTab(int nwins, int first, Monitor *m)
 {
-	/* little documentation of functions */
-	/* void drw_rect(Drw *drw, int x, int y, unsigned int w, unsigned int h, int filled, int invert); */
-	/* int drw_text(Drw *drw, int x, int y, unsigned int w, unsigned int h, unsigned int lpad, const char *text, int invert); */
-	/* void drw_map(Drw *drw, Window win, int x, int y, unsigned int w, unsigned int h); */
-
 	Client *c;
 	int h;
+
+	usemonfont(m);
+	drw_resize(drw, maxWTab, maxHTab);
+
+	XSetForeground(dpy, drw->gc, scheme[SchemeNorm][ColBg].pixel);
+	XFillRectangle(dpy, drw->drawable, drw->gc, 0, 0, maxWTab, maxHTab);
 
 	if (first) {
 		Monitor *m = selmon;
 		XSetWindowAttributes wa = {
 			.override_redirect = True,
-			.background_pixmap = ParentRelative,
+			.background_pixel = scheme[SchemeNorm][ColBg].pixel,
 			.event_mask = ButtonPressMask|ExposureMask
 		};
 
 		selmon->maxWTab = maxWTab;
 		selmon->maxHTab = maxHTab;
 
-		/* decide position of tabwin */
 		int posX = selmon->mx;
 		int posY = selmon->my;
-		if (tabPosX == 0)
-			posX += 0;
+
 		if (tabPosX == 1)
 			posX += (selmon->mw / 2) - (maxWTab / 2);
 		if (tabPosX == 2)
@@ -2089,37 +2171,37 @@ drawTab(int nwins, int first, Monitor *m)
 			posY += selmon->mh - maxHTab;
 		if (tabPosY == 1)
 			posY += (selmon->mh / 2) - (maxHTab / 2);
-		if (tabPosY == 2)
-			posY += 0;
 
-		h = selmon->maxHTab;
-		/* XCreateWindow(display, parent, x, y, width, height, border_width, depth, class, visual, valuemask, attributes); just reference */
-		m->tabwin = XCreateWindow(dpy, root, posX, posY, selmon->maxWTab, selmon->maxHTab, 2, DefaultDepth(dpy, screen),
-								CopyFromParent, DefaultVisual(dpy, screen),
-								CWOverrideRedirect|CWBackPixmap|CWEventMask, &wa); /* create tabwin */
+		m->tabwin = XCreateWindow(
+			dpy, root,
+			posX, posY,
+			selmon->maxWTab, selmon->maxHTab,
+			2,
+			DefaultDepth(dpy, screen),
+			CopyFromParent,
+			DefaultVisual(dpy, screen),
+			CWOverrideRedirect|CWBackPixel|CWEventMask,
+			&wa
+		);
 
 		XDefineCursor(dpy, m->tabwin, cursor[CurNormal]->cursor);
-		XMapRaised(dpy, m->tabwin);
-
 	}
 
-	h = selmon->maxHTab  / m->nTabs;
+	h = selmon->maxHTab / m->nTabs;
 
 	int y = 0;
-	int n = 0;
-	for (int i = 0;i < m->nTabs;i++) { /* draw all clients into tabwin */
+	for (int i = 0; i < m->nTabs; i++) {
 		c = m->altsnext[i];
-		if(!ISVISIBLE(c)) continue;
-		/* if (HIDDEN(c)) continue; uncomment if you're using awesomebar patch */
+		if (!ISVISIBLE(c))
+			continue;
 
-		n++;
 		drw_setscheme(drw, scheme[(c == m->sel) ? SchemeSel : SchemeNorm]);
 		drw_text(drw, 0, y, selmon->maxWTab, h, 0, c->name, 0);
 		y += h;
 	}
 
-	drw_setscheme(drw, scheme[SchemeNorm]);
 	drw_map(drw, m->tabwin, 0, 0, selmon->maxWTab, selmon->maxHTab);
+	XRaiseWindow(dpy, m->tabwin);
 }
 
 void

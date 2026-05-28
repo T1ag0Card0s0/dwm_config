@@ -4,7 +4,7 @@
 static const unsigned int borderpx  = 1;        /* border pixel of windows */
 static const unsigned int gappx    	= 15;        /* gap pixel between windows */
 static const unsigned int snap      = 32;       /* snap pixel */
-static const unsigned int systraypinning = 0;   /* 0: sloppy systray follows selected monitor, >0: pin systray to monitor X */
+static const unsigned int systraypinning = 1;   /* 0: sloppy systray follows selected monitor, >0: pin systray to monitor X */
 static const unsigned int systrayonleft = 0;    /* 0: systray in the right corner, >0: systray on left of status text */
 static const unsigned int systrayspacing = 2;   /* systray spacing */
 static const int systraypinningfailfirst = 1;   /* 1: if pinning fails, display systray on the first monitor, False: display systray on the last monitor*/
@@ -21,9 +21,13 @@ static const int showsystray        = 1;        /* 0 means no systray */
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
 
-static const char *fonts_mon0[] = { "JetBrainsMono Nerd Font Mono:pixelsize=14:antialias=true:autohint=true" };
+static const char *fonts_mon0[] = {
+    "JetBrainsMono Nerd Font Mono:pixelsize=14:antialias=true:autohint=true"
+};
 
-static const char *fonts_mon1[] = { "JetBrainsMono Nerd Font Mono:pixelsize=20:antialias=true:autohint=true" };
+static const char *fonts_mon1[] = {
+    "JetBrainsMono Nerd Font Mono:pixelsize=16:antialias=true:autohint=true"
+};
 
 static const char **barfonts[] = {
     fonts_mon0,
@@ -122,10 +126,19 @@ static const char *termcmd[] = { "st", "-f", stfont, NULL };
 static const char *kittycmd[] = { "kitty", NULL };
 static const char* roficmd[] = { "rofi", "-show", "drun", NULL };
 
+static const char *power_button_label = "⏻";
+static const char *powerprofile_button_label = " ";
+
+static const char *powerprofile_icons[][2] = {
+    { "performance", "" },
+    { "balanced", "" },
+    { "power-saver", "" },
+};
+
 static const BarButton barbuttons[] = {
-    /* label        scheme          command       */
-    { " ⏻ ",       SchemeGhost0,   powermenucmd  },  /* rightmost */
-    /* add more here, each one appears one step to the left */
+    /* label                        scheme         function            argument */
+    { &power_button_label,          SchemeGhost0,  spawn,              {.v = powermenucmd} },
+    { &powerprofile_button_label,   SchemeGhost2,  cyclepowerprofile,  {0} },
 };
 
 static const Key keys[] = {
